@@ -1,45 +1,22 @@
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <string>
-#include "./monitor.hpp"
+#include "monitor.h"
 
-using std::cout, std::flush;
-using std::this_thread::sleep_for;
-using std::chrono::seconds;
+const VitalBoundary tempBoundary = {
+    {95.0f, 96.53f, 96.54f, 100.47f, 102.0f},
+    {"Hypothermia", "Near Hypothermia", "Normal", "Near Hyperthermia", "Hyperthermia"}
+};
+const VitalBoundary pulseBoundary = {
+    {60.0f, 61.5f, 61.6f, 98.5f, 100.0f},
+    {"Bradycardia", "Near Bradycardia", "Normal", "Near Tachycardia", "Tachycardia"}
+};
+const VitalBoundary spo2Boundary = {
+    {90.0f, 91.35f, 91.36f, 148.65f, 150.0f},
+    {"Hypoxemia", "Near Hypoxemia", "Normal", "Near Hyperoxemia", "Hyperoxemia"}
+};
 
-bool checkVital(const VitalCheck& vital, std::function<void(const std::string&)> alert);
-
-void PrintAlertMessage(const std::string& message) {
-    cout << message << "\n";
-    for (int i = 0; i < 6; ++i) {
-        cout << "\r* " << flush;
-        sleep_for(seconds(1));
-        cout << "\r *" << flush;
-        sleep_for(seconds(1));
-    }
-}
-
-bool checkVital(const VitalCheck& vital, std::function<void(const std::string&)> alert) {
-    if (vital.value < vital.min || vital.value > vital.max) {
-        alert(vital.name + " is out of range!");
-        return false;
-    }
-    return true;
-}
-
-int areAllVitalsNormal(float temperature, float pulseRate, float spo2,
-             std::function<void(const std::string&)> alert) {
-const VitalCheck vitals[] = {
-        {"Temperature", temperature, 95.0, 102.0},
-        {"Pulse Rate", pulseRate, 60.0, 100.0},
-        {"Oxygen Saturation", spo2, 90.0, 100.0}
-    };
-
-    bool allVitalsOk = true;
-    for (int i = 0; i < 3; ++i) {
-        allVitalsOk = checkVital(vitals[i], alert) && allVitalsOk;
-    }
-
-    return allVitalsOk;
+VitalsResult evaluateVitals(float temperature, float pulse, float spo2) {
+    VitalsResult result;
+    result.temp = mapToCondition(temperature, tempBoundary);
+    result.pulse = mapToCondition(pulse, pulseBoundary);
+    result.spo2 = mapToCondition(spo2, spo2Boundary);
+    return result;
 }
