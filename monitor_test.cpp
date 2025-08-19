@@ -1,41 +1,33 @@
-// monitor_test.cpp
 #include <gtest/gtest.h>
 #include <vector>
 #include <string>
-#include <utility>
-#include <map>
+#include "./monitor.hpp"
 
-// Include your monitor logic (assumes the functions are in monitor.cpp and declared in a header)
-#include "monitor.h"  // You should create a header file exposing handle_vitals, vitals_ok, etc.
-
-// Test temperature vital logic
-TEST(MonitorTest, TemperatureCheck) {
-    struct TestCase {
-        int temp;
-        int pulse;
-        int spo2;
-        bool expected_ok;
-        std::string expected_msg;
+std::vector<std::string> messages;
+auto captureAlert = [&messages](const std::string& msg) {
+        messages.push_back(msg);
     };
 
-    std::vector<TestCase> cases = {
-        {94, 80, 95, false, "Temperature critical!"},
-        {103, 80, 95, false, "Temperature critical!"},
-        {95, 80, 95, true, ""},
-        {102, 80, 95, true, ""}
-    };
+TEST(Monitor, TemperatureOutOfRangeHigh) {
+    ASSERT_FALSE(areAllVitalsNormal(103.0, 70, 95, captureAlert));
+}
 
-    for (const auto& test : cases) {
-        std::map<std::string, int> vitals = {
-            {"temperature", test.temp},
-            {"pulseRate", test.pulse},
-            {"spo2", test.spo2}
-        };
-        std::vector<std::pair<std::string, std::string>> failed;
-        bool ok = vitals_ok(vitals, failed);
+TEST(Monitor, TemperatureOutOfRangeLow) {
+    ASSERT_FALSE(areAllVitalsNormal(94.0, 70, 95, captureAlert));
+}
 
-        EXPECT_EQ(ok, test.expected_ok);
-        if (!test.expected_ok) {
-            bool found = false;
-            for (const auto& pair : failed) {
-                if (pair.fi
+TEST(Monitor, PulseRateOutOfRangeHigh) {
+    ASSERT_FALSE(areAllVitalsNormal(98.6, 105.0, 95, captureAlert));
+}
+
+TEST(Monitor, PulseRateOutOfRangeLow) {
+    ASSERT_FALSE(areAllVitalsNormal(98.6, 50.0, 95, captureAlert));
+}
+
+TEST(Monitor, Spo2OutOfRangeLow) {
+    ASSERT_FALSE(areAllVitalsNormal(98.6, 70, 85.0, captureAlert));
+}
+
+TEST(Monitor, AllVitalsOk) {
+    ASSERT_TRUE(areAllVitalsNormal(98.6, 70, 95, captureAlert));
+}
