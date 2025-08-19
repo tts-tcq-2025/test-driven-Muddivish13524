@@ -1,37 +1,45 @@
-// monitor.cpp
 #include <iostream>
-#include <map>
-#include <string>
 #include <thread>
 #include <chrono>
-#include <vector>
+#include <string>
+#include "./monitor.hpp"
 
-// Define vital limits
-struct Limits {
-    int min;
-    int max;
-};
+using std::cout, std::flush;
+using std::this_thread::sleep_for;
+using std::chrono::seconds;
 
-std::map<std::string, Limits> VITAL_LIMITS = {
-    {"temperature", {95, 102}},
-    {"pulseRate", {60, 100}},
-    {"spo2", {90, 100}}
-};
+bool checkVital(const VitalCheck& vital, std::function<void(const std::string&)> alert);
 
-// Message map
-std::map<std::string, std::string> messages = {
-    {"temperature", "Temperature critical!"},
-    {"pulseRate", "Pulse Rate is out of range!"},
-    {"spo2", "Oxygen Saturation out of range!"}
-};
-
-// Check if value is within limits
-bool is_within_limits(int value, const Limits& limits) {
-    return limits.min <= value && value <= limits.max;
+void PrintAlertMessage(const std::string& message) {
+    cout << message << "\n";
+    for (int i = 0; i < 6; ++i) {
+        cout << "\r* " << flush;
+        sleep_for(seconds(1));
+        cout << "\r *" << flush;
+        sleep_for(seconds(1));
+    }
 }
 
-// Check vitals and collect failed messages
-std::vector<std::pair<std::string, std::string>> check_vitals(const std::map<std::string, int>& vitals) {
-    std::vector<std::pair<std::string, std::string>> failed;
-    for (const auto& pair : vitals) {
-        const std::string& vital = pair.firs
+bool checkVital(const VitalCheck& vital, std::function<void(const std::string&)> alert) {
+    if (vital.value < vital.min || vital.value > vital.max) {
+        alert(vital.name + " is out of range!");
+        return false;
+    }
+    return true;
+}
+
+int areAllVitalsNormal(float temperature, float pulseRate, float spo2,
+             std::function<void(const std::string&)> alert) {
+const VitalCheck vitals[] = {
+        {"Temperature", temperature, 95.0, 102.0},
+        {"Pulse Rate", pulseRate, 60.0, 100.0},
+        {"Oxygen Saturation", spo2, 90.0, 100.0}
+    };
+
+    bool allVitalsOk = true;
+    for (int i = 0; i < 3; ++i) {
+        allVitalsOk = checkVital(vitals[i], alert) && allVitalsOk;
+    }
+
+    return allVitalsOk;
+}
