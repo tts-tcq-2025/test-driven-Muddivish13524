@@ -1,13 +1,15 @@
 #pragma once
-#include <string>
-#include <functional>
+#include "vitals.h"
 
-struct VitalCheck {
-    std::string name;
-    float value;
-    float min;
-    float max;
+extern const VitalBoundary tempBoundary;
+extern const VitalBoundary pulseBoundary;
+extern const VitalBoundary spo2Boundary;
+
+struct VitalsResult {
+    VitalCondition temp;
+    VitalCondition pulse;
+    VitalCondition spo2;
 };
 
-int areAllVitalsNormal(float temperature, float pulseRate, float spo2,
-             std::function<void(const std::string&)> alert = nullptr);
+VitalsResult evaluateVitals(float temperature, float pulse, float spo2);
+
