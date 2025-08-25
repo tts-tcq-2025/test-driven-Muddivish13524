@@ -1,12 +1,11 @@
-#ifndef STRING_CALCULATOR_H
-#define STRING_CALCULATOR_H
+#ifndef STRINGCALCULATOR_H
+#define STRINGCALCULATOR_H
 
 #include <string>
 
 class StringCalculator {
 public:
-    int Add(const std::string& input);
+    static int add(const std::string& numbers);
 };
 
-#endif
-
+#endif // STRINGCALCULATOR_H
